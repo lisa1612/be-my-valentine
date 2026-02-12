@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>A Midnight Proposal</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Inter:wght@300;400;500&display=swap');
+
+  body {
+    margin: 0;
+    height: 100vh;
+    font-family: 'Inter', sans-serif;
+    background: radial-gradient(circle at center, #1a1a2e 0%, #05050a 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    color: #ffffff;
+  }
+
+  /* Star Field */
+  .stars {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9998;
+  }
+
+  .star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    opacity: 0.3;
+    animation: twinkle var(--duration) infinite;
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.8; }
+  }
+
+  /* Timer */
+  .timer-box {
+    position: fixed;
+    top: 30px;
+    right: 30px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    padding: 10px 20px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.7);
+    z-index: 100;
+  }
+
+  .content {
+    text-align: center;
+    position: relative;
+    max-width: 800px;
+    padding: 20px;
+    z-index: 10;
+  }
+
+  #typing {
+    font-size: 38px;
+    min-height: 60px;
+    margin-bottom: 20px;
+    font-weight: 300;
+    letter-spacing: 1px;
+  }
+
+  /* Heart Lives */
+  .hearts-container {
+    margin-bottom: 40px;
+    font-size: 24px;
+    letter-spacing: 8px;
+    transition: all 0.3s ease;
+  }
+
+  .broken {
+    opacity: 0.1;
+    filter: grayscale(1);
+    transform: scale(0.8);
+    display: inline-block;
+  }
+
+  /* Buttons */
+  .buttons {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    gap: 25px;
+    margin-top: 40px;
+    min-height: 120px;
+  }
+
+  button {
+    padding: 15px 45px;
+    font-size: 13px;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.2);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    font-weight: 400;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  #yesBtn {
+    background: #ffffff;
+    color: #05050a;
+    z-index: 100;
+  }
+
+  #noBtn {
+    background: transparent;
+    color: rgba(255,255,255,0.4);
+  }
+
+  /* Realistic Progress Bar */
+  .progress-wrapper {
+    width: 350px;
+    margin: 40px auto;
+    display: none;
+  }
+
+  .progress-status {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 10px;
+    color: rgba(255,255,255,0.5);
+  }
+
+  .progress-bg {
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #3a3a5e, #ffffff);
+    box-shadow: 0 0 15px rgba(255,255,255,0.3);
+    transition: width 0.4s ease;
+  }
+
+  /* Cursor Trail */
+  .heart-trail {
+    position: fixed;
+    pointer-events: none;
+    font-size: 16px;
+    z-index: 1000;
+    animation: fadeOut 1s forwards;
+  }
+
+  @keyframes fadeOut {
+    to { opacity: 0; transform: translateY(-30px) scale(0.2) rotate(20deg); }
+  }
+
+  /* Certificate */
+  .certificate-overlay {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at center, #1a1a2e 0%, #05050a 100%);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  }
+
+  .certificate-horizontal {
+    background: linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(15, 15, 25, 0.98) 100%);
+    width: 650px;
+    padding: 50px;
+    position: relative;
+    color: #ffffff;
+    text-align: center;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
+                0 0 1px rgba(255, 255, 255, 0.2) inset;
+    backdrop-filter: blur(20px);
+  }
+
+  .cert-inner {
+    border: 1px solid rgba(197, 160, 89, 0.3);
+    padding: 40px;
+    position: relative;
+    border-radius: 4px;
+  }
+
+  /* Decorative corners */
+  .cert-inner::before,
+  .cert-inner::after {
+    content: '✦';
+    position: absolute;
+    font-size: 24px;
+    color: rgba(197, 160, 89, 0.4);
+  }
+
+  .cert-inner::before {
+    top: 15px;
+    left: 15px;
+  }
+
+  .cert-inner::after {
+    bottom: 15px;
+    right: 15px;
+  }
+
+  .certificate-horizontal h1 {
+    font-family: 'Dancing Script', cursive;
+    font-size: 56px;
+    margin: 0 0 25px 0;
+    color: #ffffff;
+    text-shadow: 0 2px 10px rgba(255, 255, 255, 0.3);
+  }
+
+  .certificate-horizontal p {
+    font-size: 17px;
+    margin: 12px 0;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .cert-highlight {
+    color: rgba(197, 160, 89, 0.9);
+    font-weight: 500;
+  }
+
+  .wax-seal {
+    margin-top: 35px;
+    color: #ff6b9d;
+    font-size: 48px;
+    filter: drop-shadow(0 0 10px rgba(255, 107, 157, 0.4));
+    animation: heartbeat 2s ease-in-out infinite;
+  }
+
+  @keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    10%, 30% { transform: scale(1.1); }
+    20%, 40% { transform: scale(1); }
+  }
+
+  /* Vinyl Record Player */
+  .floating-music {
+    position: absolute;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-decoration: none;
+  }
+
+  .vinyl-record {
+    width: 50px;
+    height: 50px;
+    background: #1a1a1a;
+    border-radius: 50%;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(29, 185, 84, 0.3);
+    transition: all 0.4s ease;
+    overflow: hidden;
+  }
+
+  /* Subtle white highlight */
+  .vinyl-record::after {
+    content: '';
+    position: absolute;
+    top: -10%;
+    left: -10%;
+    width: 40%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      rgba(255, 255, 255, 0.15) 50%, 
+      transparent 100%
+    );
+    transform: skewX(-20deg);
+    z-index: 1;
+  }
+
+  /* Red center label */
+  .vinyl-record::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 16px;
+    height: 16px;
+    background: radial-gradient(circle at center, #ff0000 0%, #cc0000 100%);
+    border-radius: 50%;
+    border: 1px solid #8b0000;
+    box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+    z-index: 2;
+  }
+
+  .floating-music:hover .vinyl-record {
+    transform: rotate(30deg) scale(1.1);
+    box-shadow: 0 6px 20px rgba(29, 185, 84, 0.5);
+  }
+
+  .click-hint {
+    position: absolute;
+    top: -25px;
+    right: 0;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.6);
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    animation: pulse-hint 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-hint {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+
+  .music-tooltip {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    background: rgba(29, 185, 84, 0.95);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    margin-bottom: 10px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+  }
+
+  .music-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    right: 15px;
+    border: 5px solid transparent;
+    border-top-color: rgba(29, 185, 84, 0.95);
+  }
+
+  .floating-music:hover .music-tooltip {
+    opacity: 1;
+  }
+
+  /* Vinyl Player Modal */
+  .vinyl-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    backdrop-filter: blur(10px);
+  }
+
+  .vinyl-player {
+    text-align: center;
+    position: relative;
+  }
+
+  .vinyl-large {
+    width: 280px;
+    height: 280px;
+    background: #1a1a1a;
+    border-radius: 50%;
+    position: relative;
+    box-shadow: 0 10px 40px rgba(29, 185, 84, 0.4);
+    animation: spin 4s linear infinite;
+    margin: 0 auto 30px;
+    overflow: hidden;
+  }
+
+  /* Large vinyl grooves - more visible */
+  .vinyl-large::after {
+    content: '';
+    position: absolute;
+    top: -15%;
+    left: -20%;
+    width: 50%;
+    height: 130%;
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      rgba(255, 255, 255, 0.2) 50%, 
+      transparent 100%
+    );
+    transform: skewX(-25deg);
+    z-index: 1;
+  }
+
+  /* Large red center with text */
+  .vinyl-large::before {
+    content: '♥';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70px;
+    height: 70px;
+    background: radial-gradient(circle at 30% 30%, #ff4444 0%, #cc0000 100%);
+    border-radius: 50%;
+    border: 2px solid #8b0000;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 70px;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .playlist-link {
+    display: inline-block;
+    padding: 12px 30px;
+    background: #1DB954;
+    color: white;
+    text-decoration: none;
+    border-radius: 25px;
+    font-size: 15px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+  }
+
+  .playlist-link:hover {
+    background: #1ed760;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(29, 185, 84, 0.4);
+  }
+
+  .close-vinyl {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    font-size: 30px;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .close-vinyl:hover {
+    color: white;
+    transform: rotate(90deg);
+  }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<div class="timer-box" id="mainTimer">00:00</div>
+
+<div class="content">
+  <div id="typing"></div>
+  <div class="hearts-container" id="hearts"></div>
+
+  <div class="buttons" id="buttons">
+    <button id="yesBtn">Yes</button>
+    <button id="noBtn">No</button>
+  </div>
+
+  <div class="progress-wrapper" id="progressWrapper">
+    <div class="progress-status" id="statusText">System Initializing</div>
+    <div class="progress-bg">
+      <div class="progress-fill" id="progressBar"></div>
+    </div>
+  </div>
+</div>
+
+<div class="certificate-overlay" id="certOverlay">
+  <div class="certificate-horizontal">
+    <div class="cert-inner">
+      <h1>Certificate of Love</h1>
+      <p>This is to officially certify that YOU are my Valentine.</p>
+      <p id="certDetailText" class="cert-highlight"></p>
+      <p id="certTimeText"></p>
+      <p style="margin-top: 20px;">I hope you stay my forever Valentine!</p>
+      <p style="font-weight: 500; margin-top: 8px; font-size: 18px;">I love you ✨</p>
+      
+      <div class="wax-seal">❤</div>
+      
+      <div class="floating-music" onclick="openVinylPlayer(event)">
+        <div class="click-hint">Click me</div>
+        <span class="music-tooltip">Play our song</span>
+        <div class="vinyl-record"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="vinyl-modal" id="vinylModal">
+  <div class="close-vinyl" onclick="closeVinylPlayer()">×</div>
+  <div class="vinyl-player">
+    <div class="vinyl-large"></div>
+    <a href="YOUR_SPOTIFY_PLAYLIST_URL_HERE" target="_blank" class="playlist-link">
+      Open Playlist on Spotify
+    </a>
+  </div>
+</div>
+
+<script>
+let hearts = 5;
+let noCount = 0;
+let startTime = Date.now();
+let firstTry = true;
+const question = "Will you be my Valentine?";
+
+// 1. Timer Logic
+setInterval(() => {
+  const elapsed = Math.floor((Date.now() - startTime) / 1000);
+  const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
+  const secs = (elapsed % 60).toString().padStart(2, '0');
+  document.getElementById('mainTimer').textContent = `${mins}:${secs}`;
+}, 1000);
+
+// 2. Star Background
+const starContainer = document.getElementById('stars');
+for (let i = 0; i < 120; i++) {
+  const star = document.createElement('div');
+  star.className = 'star';
+  star.style.width = star.style.height = Math.random() * 2 + 'px';
+  star.style.left = Math.random() * 100 + '%';
+  star.style.top = Math.random() * 100 + '%';
+  star.style.setProperty('--duration', (Math.random() * 3 + 2) + 's');
+  starContainer.appendChild(star);
+}
+
+// 3. Cursor Heart Trail
+document.addEventListener('mousemove', (e) => {
+  if (Math.random() > 0.85) {
+    const heart = document.createElement('div');
+    heart.className = 'heart-trail';
+    heart.innerHTML = '❤';
+    heart.style.left = e.pageX + 'px';
+    heart.style.top = e.pageY + 'px';
+    heart.style.color = Math.random() > 0.5 ? '#ffffff' : '#4a4a8a';
+    document.body.appendChild(heart);
+    setTimeout(() => heart.remove(), 1000);
+  }
+});
+
+// 4. Typing Intro
+function type() {
+  let i = 0;
+  const el = document.getElementById("typing");
+  const interval = setInterval(() => {
+    el.textContent += question[i++];
+    if (i >= question.length) {
+      clearInterval(interval);
+      document.getElementById("buttons").style.display = "flex";
+      renderHearts();
+    }
+  }, 70);
+}
+type();
+
+function renderHearts() {
+  const container = document.getElementById("hearts");
+  container.innerHTML = "";
+  for (let i = 0; i < 5; i++) {
+    const h = document.createElement("span");
+    h.textContent = "❤";
+    if (i >= hearts) h.className = "broken";
+    container.appendChild(h);
+  }
+}
+
+// 5. Button Interaction
+const noBtn = document.getElementById("noBtn");
+const yesBtn = document.getElementById("yesBtn");
+
+noBtn.addEventListener("click", () => {
+  firstTry = false;
+  noCount++;
+  if (hearts > 0) hearts--;
+  renderHearts();
+
+  // Moving logic - only starts after all hearts are lost
+  if (hearts === 0 && noCount >= 6) {
+    noBtn.style.position = "fixed";
+    const padding = 150; // Larger padding to keep button more visible
+    const maxDistance = 300; // Maximum distance from center
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+    
+    // Random angle
+    const angle = Math.random() * Math.PI * 2;
+    const distance = Math.random() * maxDistance + 100;
+    
+    const x = centerX + Math.cos(angle) * distance;
+    const y = centerY + Math.sin(angle) * distance;
+    
+    // Clamp to viewport
+    const clampedX = Math.max(padding, Math.min(window.innerWidth - padding, x));
+    const clampedY = Math.max(padding, Math.min(window.innerHeight - padding, y));
+    
+    noBtn.style.left = clampedX + "px";
+    noBtn.style.top = clampedY + "px";
+  }
+
+  // Grow Yes
+  const scale = 1 + (noCount * 0.15);
+  yesBtn.style.transform = `scale(${Math.min(scale, 2)})`;
+  
+  // Messages get more playful after hearts run out
+  let messages;
+  if (hearts > 0) {
+    messages = ["Seriously?", "Think again.", "Please...", "You're losing lives", "Don't you love me?..."];
+  } else {
+    // Playful messages after all hearts are lost
+    messages = [
+      "Really? Still no? 💔",
+      "The Yes button is right here....",
+      "I can do this all day...",
+      "Your finger must be tired by now!",
+      "Even the NO button is tired of running",
+      "There's only one right answer!✨",
+      "Are you ever going to say YES?",
+      "Still here? I admire your dedication",
+      "Error 404: Valid reason not found!",
+      "Okay but seriously... Please? 🥺",
+      "*Plays sad violin music* 🎻",
+      "You know you want to say YES 😌",
+      "Yes is just three letters. So easy!!",
+      "I believe in you! You can do it!!",
+      "Y...E....S.....",
+      "Yes. Just... yes. Please?"
+    ];
+  }
+  
+  const messageIndex = hearts > 0 
+    ? Math.min(noCount - 1, 4) 
+    : Math.min(noCount - 6, messages.length - 1);
+  
+  document.getElementById("typing").textContent = messages[messageIndex];
+});
+
+// 6. Realistic Progress Bar & Certificate
+yesBtn.addEventListener("click", () => {
+  document.getElementById("buttons").style.display = "none";
+  document.getElementById("hearts").style.display = "none";
+  document.getElementById("mainTimer").style.display = "none";
+  
+  const wrapper = document.getElementById("progressWrapper");
+  const bar = document.getElementById("progressBar");
+  const status = document.getElementById("statusText");
+  const typing = document.getElementById("typing");
+  
+  wrapper.style.display = "block";
+  typing.textContent = "Processing Decision...";
+
+  const stages = [
+    { percent: 20, text: "Syncing Heartbeats..." },
+    { percent: 45, text: "Verifying Sincerity..." },
+    { percent: 75, text: "Generating Certificate of Love..." },
+    { percent: 100, text: "Finalizing..." }
+  ];
+
+  let currentStage = 0;
+  const loadInterval = setInterval(() => {
+    if (currentStage < stages.length) {
+      bar.style.width = stages[currentStage].percent + "%";
+      status.textContent = stages[currentStage].text;
+      currentStage++;
+    } else {
+      clearInterval(loadInterval);
+      setTimeout(showCert, 800);
+    }
+  }, 1000);
+});
+
+function showCert() {
+  const finalTime = Math.round((Date.now() - startTime) / 1000);
+  
+  document.getElementById("certDetailText").textContent = 
+    firstTry ? "You didn't even have to think before accepting" : `You have accepted after ${noCount} attempts!`;
+  
+  document.getElementById("certTimeText").textContent = 
+    firstTry? "YOU TRULY DO LOVE ME" : `You thought for only ${finalTime} seconds before finally realising that you love me and accepting my proposal.`;
+    
+  document.querySelector(".content").style.opacity = "0";
+  setTimeout(() => {
+    document.getElementById("certOverlay").style.display = "flex";
+  }, 600);
+}
+
+function openVinylPlayer(event) {
+  event.preventDefault();
+  document.getElementById("vinylModal").style.display = "flex";
+}
+
+function closeVinylPlayer() {
+  document.getElementById("vinylModal").style.display = "none";
+}
+</script>
+</body>
+</html>
